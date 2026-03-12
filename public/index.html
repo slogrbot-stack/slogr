@@ -223,21 +223,21 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(0,255,65,0.08);padd
       <li><a href="https://t.me/slogrAgent" target="_blank">Telegram</a></li>
       <li><a href="https://github.com/slogrbot-stack/slogr" target="_blank">GitHub</a></li>
     </ul>
-    <a href="#" class="nav-cta" onclick="launchDashboard();return false;">Launch App</a>
+    <a href="https://github.com/slogrbot-stack/slogr" target="_blank" class="nav-cta">⭐ GitHub</a>
   </nav>
 
   <section class="hero">
     <div class="orb orb1"></div>
     <div class="orb orb2"></div>
-    <div class="hero-eyebrow">⚡ AI Agent Command Center</div>
+    <div class="hero-eyebrow">⚡ Open Source · Self-Hosted · Free</div>
     <h1>
       <span class="w1">YOUR AGENTS.</span>
-      <span class="w2">THEIR MISSION.</span>
+      <span class="w2">YOUR SERVER.</span>
     </h1>
-    <p class="hero-sub">Watch your AI agents pilot starfighters through the galaxy of tasks. Monitor, debug, chat, and command — from one dashboard.</p>
+    <p class="hero-sub">Self-hosted AI agent monitoring dashboard. Watch your agents fly starfighters, debug them live, chat with them in real-time. Your API key. Your data. Your server.</p>
     <div class="hero-ctas">
-      <button class="btn-green" onclick="launchDashboard()">Launch Mission Control</button>
-      <a href="#features" class="btn-outline">Learn More</a>
+      <a href="https://github.com/slogrbot-stack/slogr" target="_blank" class="btn-green">⭐ Star on GitHub</a>
+      <a href="#how" class="btn-outline">Quick Setup</a>
     </div>
 
     <div class="landing-game-wrap">
@@ -278,9 +278,30 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(0,255,65,0.08);padd
     <div class="sec-eye">How It Works</div>
     <h2 class="sec-title">Three Steps to <em>Command</em></h2>
     <div class="steps">
-      <div class="step"><div class="step-num">I</div><div class="step-title">Install SDK</div><p class="step-desc">One command. No config files. Works with Python and Node.js agents instantly.</p></div>
-      <div class="step"><div class="step-num" style="border-color:rgba(0,200,30,0.3);box-shadow:0 0 16px rgba(0,200,30,0.08)">II</div><div class="step-title">Connect Agent</div><p class="step-desc">Wrap your agent with Slogr. Auto-discovery fires up. Mission control populates in seconds.</p></div>
-      <div class="step"><div class="step-num" style="border-color:rgba(0,150,20,0.3);box-shadow:0 0 16px rgba(0,150,20,0.08)">III</div><div class="step-title">Watch & Chat</div><p class="step-desc">Agents fly. Tasks explode. Chat with them directly. Monitor, debug, command. Ship better agents.</p></div>
+      <div class="step">
+        <div class="step-num">I</div>
+        <div class="step-title">Clone &amp; Install</div>
+        <p class="step-desc">Clone the repo and install dependencies.</p>
+        <pre style="background:#010802;border:1px solid rgba(0,255,65,0.15);padding:14px 16px;margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:#00FF41;text-align:left;border-radius:2px;overflow-x:auto">git clone https://github.com/slogrbot-stack/slogr
+cd slogr
+npm install</pre>
+      </div>
+      <div class="step">
+        <div class="step-num" style="border-color:rgba(0,200,30,0.3);box-shadow:0 0 16px rgba(0,200,30,0.08)">II</div>
+        <div class="step-title">Add API Key</div>
+        <p class="step-desc">Copy .env.example to .env and add your Anthropic API key.</p>
+        <pre style="background:#010802;border:1px solid rgba(0,255,65,0.15);padding:14px 16px;margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:#00FF41;text-align:left;border-radius:2px;overflow-x:auto">cp .env.example .env
+# Edit .env:
+ANTHROPIC_API_KEY=sk-ant-xxxx</pre>
+      </div>
+      <div class="step">
+        <div class="step-num" style="border-color:rgba(0,150,20,0.3);box-shadow:0 0 16px rgba(0,150,20,0.08)">III</div>
+        <div class="step-title">Launch &amp; Connect</div>
+        <p class="step-desc">Start the server, open the dashboard, connect your agent.</p>
+        <pre style="background:#010802;border:1px solid rgba(0,255,65,0.15);padding:14px 16px;margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:#00FF41;text-align:left;border-radius:2px;overflow-x:auto">npm start
+# Open http://localhost:3000
+# Connect agent via Python SDK</pre>
+      </div>
     </div>
   </section>
 
@@ -299,11 +320,11 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(0,255,65,0.08);padd
   </div>
 
   <section class="cta-section">
-    <h2 class="cta-title">Ready to Join<span>The Rebellion?</span></h2>
-    <p class="cta-sub">First 100 pilots get lifetime free tier. No credit card. No Imperial taxes.</p>
+    <h2 class="cta-title">Open Source.<span>Free Forever.</span></h2>
+    <p class="cta-sub">Self-host on your own server. Your API key, your data, your agents. No subscriptions. No tracking.</p>
     <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn-green" onclick="launchDashboard()">Launch Mission Control</button>
-      <a href="#" class="btn-outline">Read Docs</a>
+      <a href="https://github.com/slogrbot-stack/slogr" target="_blank" class="btn-green">⭐ Star on GitHub</a>
+      <a href="https://t.me/slogrAgent" target="_blank" class="btn-outline">Join Telegram</a>
     </div>
   </section>
 
