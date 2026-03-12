@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slogr — Your Agents. Their Mission.</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+:root {
+  --g: #00FF41;
+  --g2: #00CC33;
+  --g3: #008020;
+  --g4: #004010;
+  --black: #000200;
+  --dark: #010802;
+  --dark2: #020D03;
+  --panel: #030F04;
+  --border: rgba(0,255,65,0.15);
+  --border2: rgba(0,255,65,0.08);
+  --glow: 0 0 16px rgba(0,255,65,0.5), 0 0 40px rgba(0,255,65,0.15);
+  --glow2: 0 0 8px rgba(0,255,65,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:#a0ffb0;font-family:'Rajdhani',sans-serif;overflow-x:hidden;cursor:none;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);z-index:1000;pointer-events:none;}
+
+/* CURSOR */
+#cur{position:fixed;width:12px;height:12px;background:var(--g);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:var(--glow);transition:width .15s,height .15s;}
+#curR{position:fixed;width:32px;height:32px;border:1px solid rgba(0,255,65,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
+
+/* PAGES */
+#landingPage{display:block;}
+#dashboardPage{display:none;height:100vh;overflow:hidden;}
+
+/* ═══ LANDING PAGE ═══ */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 60px;background:linear-gradient(180deg,rgba(0,2,0,0.97) 0%,transparent 100%);border-bottom:1px solid rgba(0,255,65,0.08);}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.6rem;color:var(--g);text-shadow:var(--glow);letter-spacing:5px;text-decoration:none;cursor:none;}
+.nav-links{display:flex;gap:36px;list-style:none;}
+.nav-links a{font-family:'Share Tech Mono',monospace;font-size:0.78rem;color:rgba(160,255,176,0.45);text-decoration:none;letter-spacing:2px;text-transform:uppercase;transition:color .3s;cursor:none;}
+.nav-links a:hover{color:var(--g);text-shadow:var(--glow2);}
+.nav-cta{font-family:'Share Tech Mono',monospace;font-size:0.78rem;letter-spacing:2px;padding:10px 24px;border:1px solid var(--g);color:var(--g);text-decoration:none;text-transform:uppercase;transition:all .3s;cursor:none;}
+.nav-cta:hover{background:var(--g);color:var(--black);box-shadow:var(--glow);}
+
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;z-index:2;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.08;pointer-events:none;animation:orbFloat 10s ease-in-out infinite;}
+.orb1{width:500px;height:500px;background:var(--g);top:-150px;left:-100px;}
+.orb2{width:300px;height:300px;background:var(--g2);bottom:-80px;right:-80px;animation-delay:-4s;}
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+
+.hero-eyebrow{font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:6px;color:var(--g);text-shadow:var(--glow2);text-transform:uppercase;margin-bottom:20px;animation:fadeUp .8s ease both;}
+.hero-eyebrow::after{content:' _';animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+h1{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(2.8rem,6vw,5.8rem);line-height:1.05;margin-bottom:12px;animation:fadeUp .8s .1s ease both;}
+h1 .w1{color:#fff;display:block;}
+h1 .w2{display:block;color:var(--g);text-shadow:var(--glow);}
+
+.hero-sub{font-size:1.15rem;font-weight:300;color:rgba(160,255,176,0.5);max-width:580px;margin:24px auto 48px;line-height:1.75;animation:fadeUp .8s .2s ease both;}
+.hero-ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;animation:fadeUp .8s .3s ease both;}
+
+.btn-green{font-family:'Orbitron',monospace;font-weight:700;font-size:0.82rem;letter-spacing:3px;padding:16px 40px;background:var(--g);color:var(--black);text-decoration:none;text-transform:uppercase;cursor:none;transition:all .3s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));border:none;}
+.btn-green:hover{box-shadow:var(--glow);transform:translateY(-2px);}
+.btn-outline{font-family:'Share Tech Mono',monospace;font-size:0.82rem;letter-spacing:2px;padding:16px 40px;background:transparent;color:rgba(160,255,176,0.6);text-decoration:none;text-transform:uppercase;cursor:none;transition:all .3s;border:1px solid rgba(160,255,176,0.2);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+.btn-outline:hover{border-color:var(--g);color:var(--g);box-shadow:var(--glow2);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Mini game preview on landing */
+.landing-game-wrap{margin:60px auto 0;max-width:800px;animation:fadeUp .8s .5s ease both;}
+.landing-game-frame{border:1px solid rgba(0,255,65,0.2);border-radius:4px;overflow:hidden;box-shadow:0 0 60px rgba(0,255,65,0.08),0 40px 80px rgba(0,0,0,0.6);}
+.frame-bar{background:rgba(0,255,65,0.04);border-bottom:1px solid rgba(0,255,65,0.1);padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.f-dot{width:9px;height:9px;border-radius:50%;}
+.f-title{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:rgba(160,255,176,0.3);margin-left:auto;}
+#previewCanvas{display:block;width:100%;background:#000200;}
+
+/* Stats */
+.stats-bar{position:relative;z-index:2;border-top:1px solid rgba(0,255,65,0.08);border-bottom:1px solid rgba(0,255,65,0.08);background:rgba(0,2,0,0.9);display:flex;justify-content:center;}
+.stat-item{flex:1;max-width:220px;padding:26px 20px;text-align:center;border-right:1px solid rgba(0,255,65,0.06);}
+.stat-item:last-child{border-right:none;}
+.stat-num{font-family:'Orbitron',monospace;font-weight:700;font-size:1.8rem;color:var(--g);text-shadow:var(--glow2);display:block;}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:3px;color:rgba(160,255,176,0.3);text-transform:uppercase;margin-top:4px;display:block;}
+
+/* Sections */
+.section{position:relative;z-index:2;padding:120px 60px;max-width:1200px;margin:0 auto;}
+.sec-eye{font-family:'Share Tech Mono',monospace;font-size:0.7rem;letter-spacing:5px;color:var(--g);text-transform:uppercase;margin-bottom:14px;}
+.sec-eye::before{content:'— ';}
+.sec-title{font-family:'Orbitron',monospace;font-weight:700;font-size:clamp(1.8rem,3vw,2.8rem);color:#fff;line-height:1.2;margin-bottom:14px;}
+.sec-title em{font-style:normal;color:var(--g);text-shadow:var(--glow2);}
+.sec-desc{font-size:1.05rem;color:rgba(160,255,176,0.4);max-width:500px;line-height:1.7;margin-bottom:60px;}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+.card{background:var(--dark2);border:1px solid rgba(0,255,65,0.06);padding:36px 28px;position:relative;overflow:hidden;transition:all .3s;cursor:none;}
+.card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:0;transition:opacity .3s;}
+.card:hover{border-color:rgba(0,255,65,0.2);transform:translateY(-4px);}
+.card:hover::after{opacity:1;}
+.card-num{position:absolute;top:18px;right:18px;font-family:'Orbitron',monospace;font-size:0.58rem;color:rgba(0,255,65,0.15);letter-spacing:2px;}
+.card-icon{font-size:1.8rem;margin-bottom:16px;display:block;}
+.card-title{font-family:'Orbitron',monospace;font-weight:700;font-size:0.85rem;color:#fff;letter-spacing:1px;margin-bottom:10px;}
+.card-desc{font-size:0.92rem;color:rgba(160,255,176,0.38);line-height:1.6;}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:60px;position:relative;}
+.steps::before{content:'';position:absolute;top:28px;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:0.15;}
+.step{text-align:center;}
+.step-num{width:56px;height:56px;border:1px solid rgba(0,255,65,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:'Orbitron',monospace;font-weight:700;font-size:1.1rem;color:var(--g);background:var(--dark2);position:relative;z-index:1;box-shadow:0 0 16px rgba(0,255,65,0.1);}
+.step-title{font-family:'Orbitron',monospace;font-weight:700;font-size:0.85rem;color:#fff;margin-bottom:10px;letter-spacing:1px;}
+.step-desc{font-size:0.92rem;color:rgba(160,255,176,0.38);line-height:1.6;}
+
+.factions{position:relative;z-index:2;padding:70px 60px;text-align:center;border-top:1px solid rgba(0,255,65,0.06);border-bottom:1px solid rgba(0,255,65,0.06);background:rgba(0,255,65,0.01);}
+.fw-label{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:5px;color:rgba(160,255,176,0.22);text-transform:uppercase;margin-bottom:36px;}
+.fw-list{display:flex;justify-content:center;gap:50px;flex-wrap:wrap;}
+.fw-item{font-family:'Share Tech Mono',monospace;font-size:0.8rem;color:rgba(160,255,176,0.28);letter-spacing:2px;transition:color .3s;cursor:none;}
+.fw-item:hover{color:var(--g);text-shadow:var(--glow2);}
+
+.cta-section{position:relative;z-index:2;padding:140px 60px;text-align:center;overflow:hidden;}
+.cta-section::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(0,255,65,0.04) 0%,transparent 70%);pointer-events:none;}
+.cta-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(2rem,4vw,3.5rem);color:#fff;margin-bottom:20px;line-height:1.1;}
+.cta-title span{display:block;color:var(--g);text-shadow:var(--glow2);}
+.cta-sub{font-size:1.05rem;color:rgba(160,255,176,0.38);margin-bottom:48px;}
+
+footer{position:relative;z-index:2;border-top:1px solid rgba(0,255,65,0.08);padding:36px 60px;display:flex;align-items:center;justify-content:space-between;}
+.footer-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--g);text-shadow:var(--glow2);letter-spacing:4px;}
+.footer-links{display:flex;gap:26px;list-style:none;}
+.footer-links a{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:rgba(160,255,176,0.22);text-decoration:none;letter-spacing:2px;transition:color .3s;cursor:none;}
+.footer-links a:hover{color:var(--g);}
+.footer-copy{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:rgba(160,255,176,0.15);}
+
+/* ═══ DASHBOARD ═══ */
+.dash-app{display:grid;grid-template-rows:44px 1fr;grid-template-columns:200px 1fr 320px;height:100vh;}
+.topbar{grid-column:1/-1;background:var(--dark2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:20px;z-index:10;}
+.dash-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--g);text-shadow:var(--glow);letter-spacing:4px;cursor:none;}
+.tb-status{display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:rgba(160,255,176,0.45);letter-spacing:2px;}
+.s-dot{width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 5px var(--g);animation:blink 2s infinite;}
+.tb-time{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:rgba(160,255,176,0.35);}
+.tb-score{font-family:'Orbitron',monospace;font-size:0.7rem;color:var(--g);text-shadow:var(--glow2);letter-spacing:2px;margin-left:16px;}
+.back-btn{font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(0,255,65,0.25);color:rgba(160,255,176,0.4);background:transparent;cursor:none;transition:all .2s;margin-left:8px;}
+.back-btn:hover{border-color:var(--g);color:var(--g);}
+
+.sidebar{background:var(--panel);border-right:1px solid var(--border2);overflow-y:auto;}
+.sidebar-title{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:4px;color:rgba(160,255,176,0.25);padding:12px 14px 8px;text-transform:uppercase;border-bottom:1px solid var(--border2);}
+.agent-item{padding:11px 12px;border-bottom:1px solid var(--border2);cursor:none;transition:background .2s;position:relative;}
+.agent-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--g);transform:scaleY(0);transition:transform .2s;}
+.agent-item:hover{background:rgba(0,255,65,0.04);}
+.agent-item.active{background:rgba(0,255,65,0.07);}
+.agent-item.active::before{transform:scaleY(1);}
+.agent-header{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.a-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.a-dot.running{background:var(--g);box-shadow:0 0 5px var(--g);animation:blink 1.5s infinite;}
+.a-dot.idle{background:rgba(160,255,176,0.15);}
+.a-dot.thinking{background:#FFE81A;box-shadow:0 0 5px #FFE81A;animation:blink .7s infinite;}
+.a-name{font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#a0ffb0;}
+.a-fw{font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:rgba(160,255,176,0.25);letter-spacing:2px;}
+.a-tasks{font-family:'Orbitron',monospace;font-size:0.62rem;color:var(--g);margin-left:auto;}
+.a-bar{height:2px;background:rgba(0,255,65,0.08);margin-top:5px;}
+.a-bar-fill{height:100%;background:var(--g);transition:width .5s;}
+
+.game-area{background:var(--black);position:relative;overflow:hidden;}
+#gameCanvas{display:block;width:100%;height:100%;}
+.g-overlay{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;z-index:5;}
+.hud-badge{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:rgba(160,255,176,0.4);background:rgba(0,10,2,0.8);border:1px solid var(--border2);padding:4px 9px;letter-spacing:2px;}
+
+.chat-panel{background:var(--panel);border-left:1px solid var(--border2);display:flex;flex-direction:column;}
+.chat-header{padding:11px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;}
+.ch-name{font-family:'Orbitron',monospace;font-size:0.78rem;color:var(--g);text-shadow:var(--glow2);letter-spacing:2px;}
+.ch-status{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:rgba(160,255,176,0.28);letter-spacing:2px;margin-top:2px;}
+.messages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;}
+.messages::-webkit-scrollbar{width:3px;}
+.messages::-webkit-scrollbar-thumb{background:var(--g3);}
+.msg{max-width:92%;animation:msgIn .3s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;}
+.msg.agent{align-self:flex-start;}
+.msg-bubble{padding:7px 11px;font-family:'Share Tech Mono',monospace;font-size:0.7rem;line-height:1.55;}
+.msg.user .msg-bubble{background:rgba(0,255,65,0.09);border:1px solid rgba(0,255,65,0.22);color:#c0ffc8;}
+.msg.agent .msg-bubble{background:rgba(0,15,4,0.8);border:1px solid var(--border2);color:#a0ffb0;}
+.msg-meta{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(160,255,176,0.2);margin-top:3px;letter-spacing:1px;}
+.msg.user .msg-meta{text-align:right;}
+.typing-indicator{display:flex;gap:4px;align-items:center;padding:9px 11px;}
+.t-dot{width:5px;height:5px;background:var(--g);border-radius:50%;animation:tb .8s infinite;}
+.t-dot:nth-child(2){animation-delay:.15s;}
+.t-dot:nth-child(3){animation-delay:.3s;}
+@keyframes tb{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.no-agent{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:rgba(160,255,176,0.22);text-align:center;padding:36px 16px;line-height:2;}
+.no-agent span{color:var(--g);}
+.chat-input-area{padding:10px;border-top:1px solid var(--border2);}
+.input-wrap{display:flex;gap:7px;align-items:center;background:rgba(0,15,4,0.6);border:1px solid var(--border);padding:7px 11px;transition:border-color .2s;}
+.input-wrap:focus-within{border-color:rgba(0,255,65,0.35);box-shadow:0 0 10px rgba(0,255,65,0.08);}
+.prompt{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--g);flex-shrink:0;}
+#chatInput{flex:1;background:transparent;border:none;outline:none;font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#c0ffc8;caret-color:var(--g);}
+#chatInput::placeholder{color:rgba(160,255,176,0.18);}
+#sendBtn{background:transparent;border:1px solid var(--g3);color:var(--g);font-family:'Share Tech Mono',monospace;font-size:0.62rem;padding:4px 9px;cursor:none;transition:all .2s;letter-spacing:1px;}
+#sendBtn:hover{background:rgba(0,255,65,0.09);border-color:var(--g);}
+
+@media(max-width:768px){
+  nav{padding:14px 20px;} .nav-links{display:none;}
+  .section{padding:80px 20px;} .cards{grid-template-columns:1fr;} .steps{grid-template-columns:1fr;}
+  .steps::before{display:none;} footer{flex-direction:column;gap:18px;text-align:center;}
+  .dash-app{grid-template-columns:1fr;grid-template-rows:44px 1fr;}
+  .sidebar,.chat-panel{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="curR"></div>
+<canvas id="stars"></canvas>
+
+<!-- ══════════ LANDING PAGE ══════════ -->
+<div id="landingPage">
+  <nav>
+    <a href="#" class="logo">SLOGR</a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#frameworks">Frameworks</a></li>
+    </ul>
+    <a href="#" class="nav-cta" onclick="launchDashboard();return false;">Launch App</a>
+  </nav>
+
+  <section class="hero">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="hero-eyebrow">⚡ AI Agent Command Center</div>
+    <h1>
+      <span class="w1">YOUR AGENTS.</span>
+      <span class="w2">THEIR MISSION.</span>
+    </h1>
+    <p class="hero-sub">Watch your AI agents pilot starfighters through the galaxy of tasks. Monitor, debug, chat, and command — from one dashboard.</p>
+    <div class="hero-ctas">
+      <button class="btn-green" onclick="launchDashboard()">Launch Mission Control</button>
+      <a href="#features" class="btn-outline">Learn More</a>
+    </div>
+
+    <div class="landing-game-wrap">
+      <div class="landing-game-frame">
+        <div class="frame-bar">
+          <div class="f-dot" style="background:#FF4444;box-shadow:0 0 5px #FF4444"></div>
+          <div class="f-dot" style="background:#FFE81A;box-shadow:0 0 5px #FFE81A"></div>
+          <div class="f-dot" style="background:var(--g);box-shadow:0 0 5px var(--g)"></div>
+          <div class="f-title">slogr://preview — agents on standby</div>
+        </div>
+        <canvas id="previewCanvas" height="280"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-bar">
+    <div class="stat-item"><span class="stat-num">12+</span><span class="stat-label">Frameworks</span></div>
+    <div class="stat-item"><span class="stat-num">∞</span><span class="stat-label">Agents</span></div>
+    <div class="stat-item"><span class="stat-num">&lt;50ms</span><span class="stat-label">Real-time</span></div>
+    <div class="stat-item"><span class="stat-num">Chat</span><span class="stat-label">AI Native</span></div>
+  </div>
+
+  <section class="section" id="features">
+    <div class="sec-eye">Core Features</div>
+    <h2 class="sec-title">Built for Agents.<br><em>Designed for Rebels.</em></h2>
+    <p class="sec-desc">One dashboard. Every framework. Zero guesswork.</p>
+    <div class="cards">
+      <div class="card"><span class="card-num">01</span><span class="card-icon">🚀</span><div class="card-title">Mission Control</div><p class="card-desc">Watch every token, tool call, and decision your agent makes in real-time. Sub-50ms latency.</p></div>
+      <div class="card"><span class="card-num">02</span><span class="card-icon">💬</span><div class="card-title">Chat with Agents</div><p class="card-desc">Open a direct channel to any agent. Give commands, ask questions, get updates — live chat with AI.</p></div>
+      <div class="card"><span class="card-num">03</span><span class="card-icon">🔗</span><div class="card-title">Multi-Framework</div><p class="card-desc">LangChain, CrewAI, AutoGPT, AutoGen, LlamaIndex. One SDK to connect any agent from any galaxy.</p></div>
+      <div class="card"><span class="card-num">04</span><span class="card-icon">🐛</span><div class="card-title">Debug Intel</div><p class="card-desc">AI-powered error analysis. Find exactly where your agent went off-mission. Fix in seconds.</p></div>
+      <div class="card"><span class="card-num">05</span><span class="card-icon">💰</span><div class="card-title">Cost Tracker</div><p class="card-desc">Track API spend per agent, per task, per mission. Stop burning resources in the dark.</p></div>
+      <div class="card"><span class="card-num">06</span><span class="card-icon">⚡</span><div class="card-title">Web3 Identity</div><p class="card-desc">Connect your wallet. Your agents, your data. On-chain agent identity and activity proof.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="how" style="border-top:1px solid rgba(0,255,65,0.06)">
+    <div class="sec-eye">How It Works</div>
+    <h2 class="sec-title">Three Steps to <em>Command</em></h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">I</div><div class="step-title">Install SDK</div><p class="step-desc">One command. No config files. Works with Python and Node.js agents instantly.</p></div>
+      <div class="step"><div class="step-num" style="border-color:rgba(0,200,30,0.3);box-shadow:0 0 16px rgba(0,200,30,0.08)">II</div><div class="step-title">Connect Agent</div><p class="step-desc">Wrap your agent with Slogr. Auto-discovery fires up. Mission control populates in seconds.</p></div>
+      <div class="step"><div class="step-num" style="border-color:rgba(0,150,20,0.3);box-shadow:0 0 16px rgba(0,150,20,0.08)">III</div><div class="step-title">Watch & Chat</div><p class="step-desc">Agents fly. Tasks explode. Chat with them directly. Monitor, debug, command. Ship better agents.</p></div>
+    </div>
+  </section>
+
+  <div class="factions" id="frameworks">
+    <div class="fw-label">Compatible Across All Factions</div>
+    <div class="fw-list">
+      <span class="fw-item">LangChain</span>
+      <span class="fw-item">AutoGPT</span>
+      <span class="fw-item">CrewAI</span>
+      <span class="fw-item">AutoGen</span>
+      <span class="fw-item">LlamaIndex</span>
+      <span class="fw-item">Flowise</span>
+      <span class="fw-item">AgentGPT</span>
+      <span class="fw-item">SuperAGI</span>
+    </div>
+  </div>
+
+  <section class="cta-section">
+    <h2 class="cta-title">Ready to Join<span>The Rebellion?</span></h2>
+    <p class="cta-sub">First 100 pilots get lifetime free tier. No credit card. No Imperial taxes.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn-green" onclick="launchDashboard()">Launch Mission Control</button>
+      <a href="#" class="btn-outline">Read Docs</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">SLOGR</div>
+    <ul class="footer-links">
+      <li><a href="#">Twitter</a></li>
+      <li><a href="#">GitHub</a></li>
+      <li><a href="#">Discord</a></li>
+      <li><a href="#">Docs</a></li>
+    </ul>
+    <div class="footer-copy">© 2026 Slogr. May the code be with you.</div>
+  </footer>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="dashboardPage">
+  <div class="dash-app">
+    <div class="topbar">
+      <div class="dash-logo">SLOGR</div>
+      <div class="tb-status"><div class="s-dot"></div>MISSION CONTROL</div>
+      <div class="tb-status" style="margin-left:12px"><div class="s-dot" style="background:#FFE81A;box-shadow:0 0 5px #FFE81A"></div><span id="activeCount">3</span> ACTIVE</div>
+      <div class="tb-score">SCORE: <span id="scoreDisplay">0</span></div>
+      <button class="back-btn" onclick="goBack()">← BACK</button>
+      <div class="tb-time" id="clock"></div>
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-title">// Agents</div>
+      <div id="agentList"></div>
+    </div>
+    <div class="game-area">
+      <canvas id="gameCanvas"></canvas>
+      <div class="g-overlay">
+        <div class="hud-badge">⚡ REAL-TIME</div>
+        <div class="hud-badge" id="taskCount">TASKS: 0</div>
+      </div>
+    </div>
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div>
+          <div class="ch-name" id="chatAgentName">SELECT AGENT</div>
+          <div class="ch-status" id="chatAgentStatus">← Click agent to open channel</div>
+        </div>
+      </div>
+      <div id="noAgentMsg" class="no-agent">Click an agent in the sidebar<br>to open a direct channel.<br><br><span>// Each agent has its own<br>personality and mission.</span></div>
+      <div id="messages" class="messages" style="display:none"></div>
+      <div id="chatInputArea" class="chat-input-area" style="display:none">
+        <div class="input-wrap">
+          <span class="prompt">&gt;</span>
+          <input id="chatInput" type="text" placeholder="Send command to agent..." maxlength="300"/>
+          <button id="sendBtn" onclick="sendMessage()">SEND</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── PAGE SWITCH ──
+function launchDashboard(){
+  document.getElementById('landingPage').style.display='none';
+  document.getElementById('dashboardPage').style.display='block';
+  document.body.style.overflow='hidden';
+  initDashboard();
+}
+function goBack(){
+  document.getElementById('dashboardPage').style.display='none';
+  document.getElementById('landingPage').style.display='block';
+  document.body.style.overflow='';
+}
+
+// ── CURSOR ──
+const cur=document.getElementById('cur'),curR=document.getElementById('curR');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function anim(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(anim);})();
+
+// ── STARS ──
+const starsC=document.getElementById('stars');
+const sCtx=starsC.getContext('2d');
+function resizeStars(){starsC.width=window.innerWidth;starsC.height=window.innerHeight;}
+resizeStars();window.addEventListener('resize',resizeStars);
+const stars=Array.from({length:180},()=>({x:Math.random()*2000,y:Math.random()*1200,r:Math.random()*1.4+0.3,a:Math.random()}));
+function drawStars(){
+  sCtx.clearRect(0,0,starsC.width,starsC.height);
+  stars.forEach(s=>{s.a+=0.008*(Math.random()>.5?1:-1);s.a=Math.max(.05,Math.min(.9,s.a));sCtx.beginPath();sCtx.arc(s.x%starsC.width,s.y%starsC.height,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(160,255,180,${s.a})`;sCtx.fill();});
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// ── PREVIEW GAME (landing) ──
+const pc=document.getElementById('previewCanvas');
+const pCtx=pc.getContext('2d');
+let pFrame=0;
+const pAgents=[
+  {x:80,y:80,color:'#00FF41'},{x:80,y:140,color:'#00CC33'},{x:80,y:200,color:'#009922'}
+];
+const pTasks=[];
+const pBullets=[];
+const pExplosions=[];
+
+function pSpawnTask(){
+  const types=['BUG','DATA','ERROR'];
+  pTasks.push({x:pc.width+30,y:30+Math.random()*(pc.height-60),speed:1.5+Math.random()*1.5,type:types[Math.floor(Math.random()*3)],hp:1,w:56,h:22});
+}
+
+function pDrawShip(a){
+  const {x,y,color}=a;
+  pCtx.save();pCtx.translate(x,y);
+  pCtx.shadowColor=color;pCtx.shadowBlur=12;
+  pCtx.fillStyle=color;
+  pCtx.beginPath();pCtx.moveTo(18,0);pCtx.lineTo(-8,7);pCtx.lineTo(-5,0);pCtx.lineTo(-8,-7);pCtx.closePath();pCtx.fill();
+  pCtx.fillStyle=color+'66';
+  pCtx.beginPath();pCtx.moveTo(0,-3);pCtx.lineTo(-8,-14);pCtx.lineTo(-12,-5);pCtx.closePath();pCtx.fill();
+  pCtx.beginPath();pCtx.moveTo(0,3);pCtx.lineTo(-8,14);pCtx.lineTo(-12,5);pCtx.closePath();pCtx.fill();
+  pCtx.fillStyle='#00FF99';pCtx.shadowColor='#00FF99';pCtx.shadowBlur=15;
+  pCtx.beginPath();pCtx.arc(-8,0,3,0,Math.PI*2);pCtx.fill();
+  pCtx.restore();
+}
+
+function previewLoop(){
+  pFrame++;
+  pc.width=pc.offsetWidth||780;
+  pCtx.fillStyle='#000200';pCtx.fillRect(0,0,pc.width,pc.height);
+
+  if(pFrame%120===0)pSpawnTask();
+
+  pAgents.forEach((a,i)=>{
+    a.y=[80,140,200][i]+Math.sin(pFrame*.025+i*2)*14;
+    pDrawShip(a);
+
+    // Auto fire
+    pTasks.forEach(t=>{
+      if(Math.abs(t.y-a.y)<80&&Math.random()<.025){
+        pBullets.push({x:a.x+18,y:a.y,vx:8,vy:(t.y-a.y)*.05,color:a.color});
+      }
+    });
+  });
+
+  for(let ti=pTasks.length-1;ti>=0;ti--){
+    const t=pTasks[ti];t.x-=t.speed;
+    pCtx.save();pCtx.translate(t.x,t.y);
+    pCtx.shadowColor='#00FF41';pCtx.shadowBlur=8;
+    pCtx.strokeStyle='rgba(0,255,65,0.5)';pCtx.lineWidth=1;
+    pCtx.fillStyle='rgba(0,20,5,0.85)';
+    pCtx.beginPath();pCtx.moveTo(-t.w/2+4,-t.h/2);pCtx.lineTo(t.w/2,-t.h/2);pCtx.lineTo(t.w/2,t.h/2);pCtx.lineTo(-t.w/2,t.h/2);pCtx.lineTo(-t.w/2,-t.h/2+4);pCtx.closePath();pCtx.fill();pCtx.stroke();
+    pCtx.fillStyle='#00FF41';pCtx.font='bold 9px Share Tech Mono,monospace';pCtx.textAlign='center';pCtx.textBaseline='middle';
+    pCtx.fillText(t.type,0,0);pCtx.restore();
+    if(t.x<-60)pTasks.splice(ti,1);
+  }
+
+  for(let bi=pBullets.length-1;bi>=0;bi--){
+    const b=pBullets[bi];b.x+=b.vx;b.y+=b.vy;
+    pCtx.save();pCtx.shadowColor=b.color;pCtx.shadowBlur=10;pCtx.fillStyle=b.color;
+    pCtx.beginPath();pCtx.ellipse(b.x,b.y,7,2.5,0,0,Math.PI*2);pCtx.fill();pCtx.restore();
+    for(let ti=pTasks.length-1;ti>=0;ti--){
+      const t=pTasks[ti];
+      if(Math.abs(b.x-t.x)<t.w/2&&Math.abs(b.y-t.y)<t.h/2){
+        for(let i=0;i<8;i++){const ang=(i/8)*Math.PI*2,sp=1.5+Math.random()*2.5;pExplosions.push({x:t.x,y:t.y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,life:1,r:2+Math.random()*2});}
+        pTasks.splice(ti,1);pBullets.splice(bi,1);break;
+      }
+    }
+    if(b.x>pc.width+40)pBullets.splice(bi,1);
+  }
+
+  for(let ei=pExplosions.length-1;ei>=0;ei--){
+    const e=pExplosions[ei];e.x+=e.vx;e.y+=e.vy;e.life-=.05;e.vx*=.93;e.vy*=.93;
+    pCtx.save();pCtx.globalAlpha=e.life;pCtx.fillStyle='#00FF41';pCtx.shadowColor='#00FF41';pCtx.shadowBlur=8;
+    pCtx.beginPath();pCtx.arc(e.x,e.y,e.r,0,Math.PI*2);pCtx.fill();pCtx.restore();
+    if(e.life<=0)pExplosions.splice(ei,1);
+  }
+
+  requestAnimationFrame(previewLoop);
+}
+previewLoop();
+
+// ── DASHBOARD ──
+// Agent colors pool
+const AGENT_COLORS=['#00FF41','#00CC33','#009922','#00FF99','#33FF66','#00DD55'];
+function getColor(i){ return AGENT_COLORS[i % AGENT_COLORS.length]; }
+function buildPersona(a){
+  return `You are ${a.agent_name||a.agent_id}, an AI agent running on ${a.framework||'custom'} framework. You are part of the Slogr platform — a Star Wars-themed AI agent monitoring dashboard. You speak in a robotic, mission-focused style with Star Wars references. You are currently flying your starfighter completing missions. Keep responses concise (2-3 sentences max).`;
+}
+
+// Default demo agents (shown before backend connects)
+const DEMO_AGENTS=[
+  {agent_id:'R-01',agent_name:'researcher-01',framework:'LangChain',tasks_completed:0,shield:100,status:'running'},
+  {agent_id:'W-02',agent_name:'writer-bot',framework:'AutoGPT',tasks_completed:0,shield:85,status:'running'},
+  {agent_id:'D-03',agent_name:'data-crawler',framework:'CrewAI',tasks_completed:0,shield:70,status:'running'},
+];
+
+let AGENTS = DEMO_AGENTS.map((a,i)=>({...a, color:getColor(i), id:a.agent_id, name:a.agent_name, fw:a.framework, tasks:a.tasks_completed||0}));
+let selectedAgent=null;
+const chatHistory={};
+let gameAgents=[], score=0, dashFrame=0;
+let dashInitialized=false;
+let socket=null;
+let backendConnected=false;
+
+// ── SOCKET.IO CONNECTION ──
+function connectBackend(){
+  try {
+    socket = io('http://localhost:3000', { transports:['websocket','polling'] });
+
+    socket.on('connect', ()=>{
+      backendConnected=true;
+      console.log('[Slogr] Connected to Mission Control backend');
+      showToast('🟢 Backend connected');
+    });
+
+    socket.on('disconnect', ()=>{
+      backendConnected=false;
+      console.log('[Slogr] Disconnected from backend');
+      showToast('🔴 Backend offline — demo mode');
+    });
+
+    // Receive full agent list on connect
+    socket.on('state:agents', (agents)=>{
+      if(!agents||agents.length===0) return;
+      AGENTS = agents.map((a,i)=>({
+        ...a,
+        id: a.agent_id,
+        name: a.agent_name,
+        fw: a.framework,
+        tasks: a.tasks_completed||0,
+        shield: a.shield||100,
+        color: getColor(i),
+      }));
+      agents.forEach(a=>{ if(!chatHistory[a.agent_id]) chatHistory[a.agent_id]=[]; });
+      renderSidebar();
+      // Sync game agents
+      if(dashInitialized) syncGameAgents();
+    });
+
+    // Agent comes online
+    socket.on('agent:registered', (a)=>{
+      const idx = AGENTS.findIndex(x=>x.id===a.agent_id);
+      const agent = { ...a, id:a.agent_id, name:a.agent_name, fw:a.framework, tasks:a.tasks_completed||0, shield:a.shield||100, color:getColor(idx>=0?idx:AGENTS.length) };
+      if(idx>=0) AGENTS[idx]=agent; else AGENTS.push(agent);
+      if(!chatHistory[a.agent_id]) chatHistory[a.agent_id]=[];
+      renderSidebar();
+      if(dashInitialized) syncGameAgents();
+      showToast(`⚡ ${a.agent_id} joined the fleet`);
+    });
+
+    // Agent goes offline
+    socket.on('agent:offline', (data)=>{
+      const a = AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.status='idle'; renderSidebar(); }
+      showToast(`💤 ${data.agent_id} offline`);
+    });
+
+    // Task events — update agent stats in real time
+    socket.on('task:start', (data)=>{
+      const a=AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.status='running'; renderSidebar(); }
+      // Spawn visual task in game
+      if(dashInitialized) spawnTaskFromBackend(data.name);
+    });
+
+    socket.on('task:finish', (data)=>{
+      const a=AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.tasks=(a.tasks||0)+1; a.status='idle'; renderSidebar(); }
+      const ga=gameAgents.find(x=>x.id===data.agent_id);
+      if(ga){ ga.flash=20; }
+      score+=10; document.getElementById('scoreDisplay').textContent=score;
+    });
+
+    socket.on('task:fail', (data)=>{
+      const a=AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.shield=Math.max(0,(a.shield||100)-10); a.status='error'; renderSidebar(); }
+    });
+
+    // Agent status update
+    socket.on('agent:status', (data)=>{
+      const a=AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.status=data.status; renderSidebar(); }
+    });
+
+    socket.on('agent:thinking', (data)=>{
+      const a=AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.status='thinking'; renderSidebar(); }
+      const ga=gameAgents.find(x=>x.id===data.agent_id);
+      if(ga){ ga.talking=true; setTimeout(()=>{ga.talking=false;},2000); }
+    });
+
+    // Chat reply from agent via backend
+    socket.on('command:result', (data)=>{
+      if(!data.agent_id) return;
+      const history=chatHistory[data.agent_id]||[];
+      history.push({role:'agent',content:data.result||data.error||'...',ts:Date.now()});
+      chatHistory[data.agent_id]=history;
+      if(selectedAgent?.id===data.agent_id){
+        document.getElementById('typing')?.remove();
+        renderMessages();
+      }
+      const a=AGENTS.find(x=>x.id===data.agent_id);
+      if(a){ a.status='running'; renderSidebar(); }
+    });
+
+  } catch(e) {
+    console.log('[Slogr] Backend unavailable, running in demo mode');
+  }
+}
+
+// Toast notification
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,20,5,0.95);border:1px solid rgba(0,255,65,0.3);color:#00FF41;font-family:Share Tech Mono,monospace;font-size:0.7rem;padding:8px 18px;letter-spacing:2px;z-index:9990;transition:opacity .3s;'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.style.opacity='0', 2500);
+}
+
+function spawnTaskFromBackend(name){
+  // Will be set after initDashboard
+  if(window._spawnTask) window._spawnTask(name);
+}
+
+function renderSidebar(){
+  const list=document.getElementById('agentList');
+  if(!list)return;
+  list.innerHTML='';
+  AGENTS.forEach(a=>{
+    const div=document.createElement('div');
+    div.className='agent-item'+(selectedAgent?.id===a.id?' active':'');
+    div.onclick=()=>selectAgent(a);
+    div.innerHTML=`<div class="agent-header"><div class="a-dot ${a.status}"></div><div><div class="a-name">${a.id}</div><div class="a-fw">${a.fw}</div></div><div class="a-tasks">${a.tasks}</div></div><div style="font-family:'Share Tech Mono',monospace;font-size:0.57rem;color:rgba(160,255,176,0.22);margin-bottom:3px">SHIELD</div><div class="a-bar"><div class="a-bar-fill" style="width:${a.shield}%;background:${a.shield>50?a.color:'#FF4444'}"></div></div>`;
+    list.appendChild(div);
+  });
+}
+
+function selectAgent(agent){
+  selectedAgent=agent;
+  renderSidebar();
+  document.getElementById('chatAgentName').textContent=agent.name;
+  document.getElementById('chatAgentStatus').textContent=`// ${agent.fw} · ${agent.status.toUpperCase()}`;
+  document.getElementById('chatAgentStatus').style.color=agent.color;
+  document.getElementById('noAgentMsg').style.display='none';
+  document.getElementById('messages').style.display='flex';
+  document.getElementById('chatInputArea').style.display='block';
+  renderMessages();
+  document.getElementById('chatInput').focus();
+}
+
+function renderMessages(){
+  if(!selectedAgent)return;
+  const msgs=document.getElementById('messages');
+  msgs.innerHTML='';
+  const history=chatHistory[selectedAgent.id];
+  if(history.length===0){
+    const intro=document.createElement('div');
+    intro.className='msg agent';
+    intro.innerHTML=`<div class="msg-bubble">Channel open. This is ${selectedAgent.id} — ${selectedAgent.fw} unit. Standing by for your command.</div><div class="msg-meta">${selectedAgent.id} · just now</div>`;
+    msgs.appendChild(intro);
+  }
+  history.forEach(m=>{
+    const div=document.createElement('div');
+    div.className=`msg ${m.role}`;
+    const time=new Date(m.ts).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+    div.innerHTML=`<div class="msg-bubble">${m.content}</div><div class="msg-meta">${m.role==='user'?'YOU':selectedAgent.id} · ${time}</div>`;
+    msgs.appendChild(div);
+  });
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function sendMessage(){
+  if(!selectedAgent)return;
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';
+  if(!chatHistory[selectedAgent.id]) chatHistory[selectedAgent.id]=[];
+  const history=chatHistory[selectedAgent.id];
+  history.push({role:'user',content:text,ts:Date.now()});
+  renderMessages();
+  const msgs=document.getElementById('messages');
+  const typing=document.createElement('div');
+  typing.className='msg agent';typing.id='typing';
+  typing.innerHTML=`<div class="msg-bubble"><div class="typing-indicator"><div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div></div></div>`;
+  msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
+  selectedAgent.status='thinking';renderSidebar();
+
+  // If backend connected, send via socket — agent handles reply
+  if(backendConnected && socket){
+    socket.emit('dashboard:chat',{agent_id:selectedAgent.id, message:text, sender:'dashboard'});
+    // Reply will come via 'command:result' event
+    // Fallback timeout if no reply in 8s
+    selectedAgent._replyTimer=setTimeout(()=>{
+      if(document.getElementById('typing')){
+        document.getElementById('typing')?.remove();
+        // Fallback to Claude API
+        callClaudeAPI(selectedAgent, history, text);
+      }
+    }, 8000);
+    return;
+  }
+
+  // No backend — call Claude API directly
+  callClaudeAPI(selectedAgent, history, text);
+}
+
+async function callClaudeAPI(agent, history, text){
+  try{
+    const persona = agent.persona || buildPersona(agent);
+    const messages=[
+      {role:'user',content:persona+'\n\nRespond in character. Be concise.'},
+      {role:'assistant',content:`Understood. I am ${agent.id}, online and ready.`},
+      ...history.slice(-10).map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}))
+    ];
+    // Call backend proxy — API key stays in .env, never exposed in browser
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages})});
+    const data=await res.json();
+    if(data.error) throw new Error(data.error);
+    const reply=data.content?.[0]?.text||'Signal lost. Retrying...';
+    document.getElementById('typing')?.remove();
+    history.push({role:'agent',content:reply,ts:Date.now()});
+    agent.status='running';agent.tasks=(agent.tasks||0)+1;
+    renderMessages();renderSidebar();
+    const ga=gameAgents.find(a=>a.id===agent.id);
+    if(ga){ga.flash=20;ga.talking=true;setTimeout(()=>{ga.talking=false;},3000);}
+  }catch(e){
+    document.getElementById('typing')?.remove();
+    const errMsg=e.message.includes('ANTHROPIC_API_KEY')
+      ? 'API key not set. Add ANTHROPIC_API_KEY to your .env file.'
+      : 'Comms interference detected. Retrying channel...';
+    history.push({role:'agent',content:errMsg,ts:Date.now()});
+    agent.status='running';renderMessages();renderSidebar();
+  }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement.id==='chatInput')sendMessage();});
+
+function updateClock(){const now=new Date();const el=document.getElementById('clock');if(el)el.textContent=now.toLocaleTimeString('en-US',{hour12:false})+' UTC';}
+setInterval(updateClock,1000);
+
+function syncGameAgents(){
+  // Add new agents to game, keep existing ones
+  AGENTS.forEach((a,i)=>{
+    if(!gameAgents.find(g=>g.id===a.id)){
+      gameAgents.push({id:a.id,x:100,baseY:0,y:0,color:a.color||getColor(i),label:a.id,flash:0,talking:false,trail:[]});
+    }
+  });
+  // Remove agents no longer in list
+  for(let i=gameAgents.length-1;i>=0;i--){
+    if(!AGENTS.find(a=>a.id===gameAgents[i].id)) gameAgents.splice(i,1);
+  }
+}
+
+function initDashboard(){
+  if(dashInitialized)return;
+  dashInitialized=true;
+  connectBackend();
+  renderSidebar();
+
+  const canvas=document.getElementById('gameCanvas');
+  const ctx=canvas.getContext('2d');
+  function resizeCanvas(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}
+  resizeCanvas();window.addEventListener('resize',resizeCanvas);
+
+  gameAgents=AGENTS.map((a,i)=>({id:a.id,x:100,baseY:0,y:0,color:a.color||getColor(i),label:a.id,flash:0,talking:false,trail:[]}));
+
+  const tasks=[],bullets=[],explosions=[];
+  const TASK_TYPES=['BUG','TASK','ERROR','DATA','API','WARN'];
+
+  function spawnTask(label){
+    const h=canvas.height||400;
+    const t=label||TASK_TYPES[Math.floor(Math.random()*TASK_TYPES.length)];
+    const shortLabel = t.length>6 ? t.substring(0,6) : t;
+    tasks.push({x:canvas.width+40,y:60+Math.random()*(h-120),speed:1.2+Math.random()*1.8,type:shortLabel.toUpperCase(),hp:2,w:64,h:26});
+  }
+  window._spawnTask = spawnTask;
+
+  function spawnExp(x,y,color,n=10){
+    for(let i=0;i<n;i++){const ang=(i/n)*Math.PI*2,sp=1.5+Math.random()*3;explosions.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,life:1,color,r:2+Math.random()*3});}
+  }
+
+  function drawShip(a){
+    const{x,y,color,flash,talking}=a;
+    ctx.save();ctx.translate(x,y);
+    const c=flash>0?'#ffffff':color;
+    ctx.shadowColor=c;ctx.shadowBlur=flash>0?28:12;
+    ctx.fillStyle=c;
+    ctx.beginPath();ctx.moveTo(22,0);ctx.lineTo(-10,9);ctx.lineTo(-6,0);ctx.lineTo(-10,-9);ctx.closePath();ctx.fill();
+    ctx.fillStyle=c+'88';
+    ctx.beginPath();ctx.moveTo(0,-4);ctx.lineTo(-10,-20);ctx.lineTo(-16,-6);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,4);ctx.lineTo(-10,20);ctx.lineTo(-16,6);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#00FF99';ctx.shadowColor='#00FF99';ctx.shadowBlur=18;
+    ctx.beginPath();ctx.arc(-10,0,4,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    if(talking){ctx.save();ctx.font='bold 9px Share Tech Mono,monospace';ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=6;ctx.fillText('TRANSMITTING...',x+26,y-14);ctx.restore();}
+    ctx.font='600 10px Share Tech Mono,monospace';ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=5;ctx.fillText(a.label,x-14,y+30);ctx.shadowBlur=0;
+    const bw=40;const shield=AGENTS.find(ag=>ag.id===a.id)?.shield||100;
+    ctx.fillStyle='rgba(0,255,65,0.07)';ctx.fillRect(x-bw/2,y+34,bw,3);
+    ctx.fillStyle=shield>50?color:'#FF4444';ctx.fillRect(x-bw/2,y+34,bw*(shield/100),3);
+  }
+
+  function drawTask(t){
+    ctx.save();ctx.translate(t.x,t.y);ctx.shadowColor='#00FF41';ctx.shadowBlur=9;
+    ctx.strokeStyle='rgba(0,255,65,0.55)';ctx.lineWidth=1;ctx.fillStyle='rgba(0,20,5,0.88)';
+    const w=t.w,h=t.h;
+    ctx.beginPath();ctx.moveTo(-w/2+5,-h/2);ctx.lineTo(w/2,-h/2);ctx.lineTo(w/2,h/2);ctx.lineTo(-w/2,h/2);ctx.lineTo(-w/2,-h/2+5);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#00FF41';ctx.font='bold 10px Share Tech Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.type,0,0);ctx.restore();
+    for(let i=0;i<t.hp;i++){ctx.beginPath();ctx.arc(t.x-4+i*9,t.y+t.h/2+7,2.5,0,Math.PI*2);ctx.fillStyle='#FF4444';ctx.shadowColor='#FF4444';ctx.shadowBlur=4;ctx.fill();ctx.shadowBlur=0;}
+  }
+
+  function gameLoop(){
+    dashFrame++;
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='#000200';ctx.fillRect(0,0,W,H);
+
+    gameAgents.forEach((ga,i)=>{
+      ga.baseY=(i+1)*H/4;ga.y=ga.baseY+Math.sin(dashFrame*.025+i*2.1)*22;
+      if(ga.flash>0)ga.flash--;
+      ga.trail.push({x:ga.x,y:ga.y});if(ga.trail.length>10)ga.trail.shift();
+      ga.trail.forEach((p,ti)=>{const al=(ti/ga.trail.length)*.12;ctx.globalAlpha=al;ctx.beginPath();ctx.arc(p.x,p.y,1.5,0,Math.PI*2);ctx.fillStyle=ga.color;ctx.fill();ctx.globalAlpha=1;});
+
+      // Auto fire
+      let closest=null,minD=Infinity;
+      tasks.forEach(t=>{const d=Math.abs(t.y-ga.y);if(d<minD){minD=d;closest=t;}});
+      if(closest&&minD<140&&Math.random()<.033){
+        const agent=AGENTS.find(a=>a.id===ga.id);
+        bullets.push({x:ga.x+22,y:ga.y,vx:9+Math.random()*2,vy:(closest.y-ga.y)*.06,color:ga.color,owner:ga,ownerAgent:agent});
+      }
+    });
+
+    if(dashFrame%100===0)spawnTask();
+
+    for(let ti=tasks.length-1;ti>=0;ti--){
+      const t=tasks[ti];t.x-=t.speed;drawTask(t);
+      gameAgents.forEach(ga=>{if(Math.abs(t.x-ga.x)<28&&Math.abs(t.y-ga.y)<20){const ag=AGENTS.find(a=>a.id===ga.id);if(ag){ag.shield=Math.max(0,ag.shield-8);renderSidebar();}spawnExp(t.x,t.y,'#FF4444',6);tasks.splice(ti,1);}});
+      if(t.x<-80)tasks.splice(ti,1);
+    }
+
+    for(let bi=bullets.length-1;bi>=0;bi--){
+      const b=bullets[bi];b.x+=b.vx;b.y+=b.vy;
+      ctx.save();ctx.shadowColor=b.color;ctx.shadowBlur=11;ctx.fillStyle=b.color;ctx.beginPath();ctx.ellipse(b.x,b.y,9,3,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      for(let ti=tasks.length-1;ti>=0;ti--){
+        const t=tasks[ti];
+        if(Math.abs(b.x-t.x)<t.w/2&&Math.abs(b.y-t.y)<t.h/2){
+          t.hp--;spawnExp(b.x,b.y,b.color,5);bullets.splice(bi,1);
+          if(t.hp<=0){spawnExp(t.x,t.y,'#00FF41',12);tasks.splice(ti,1);b.owner.flash=15;if(b.ownerAgent){b.ownerAgent.tasks++;renderSidebar();}score+=10;document.getElementById('scoreDisplay').textContent=score;}
+          break;
+        }
+      }
+      if(b&&b.x>W+60)bullets.splice(bi,1);
+    }
+
+    for(let ei=explosions.length-1;ei>=0;ei--){
+      const e=explosions[ei];e.x+=e.vx;e.y+=e.vy;e.life-=.04;e.vx*=.94;e.vy*=.94;
+      ctx.save();ctx.globalAlpha=e.life;ctx.shadowColor=e.color;ctx.shadowBlur=11;ctx.fillStyle=e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.restore();
+      if(e.life<=0)explosions.splice(ei,1);
+    }
+
+    gameAgents.forEach(drawShip);
+    const tc=document.getElementById('taskCount');if(tc)tc.textContent=`TASKS: ${tasks.length}`;
+    const ac=document.getElementById('activeCount');if(ac)ac.textContent=AGENTS.filter(a=>a.shield>0).length;
+    requestAnimationFrame(gameLoop);
+  }
+
+  setTimeout(()=>{
+    resizeCanvas();
+    gameAgents.forEach((ga,i)=>{ga.baseY=(i+1)*canvas.height/4;ga.y=ga.baseY;});
+    gameLoop();
+    setTimeout(spawnTask,600);setTimeout(spawnTask,1400);setTimeout(spawnTask,2200);
+  },100);
+}
+</script>
+</body>
+</html>
